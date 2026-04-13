@@ -112,7 +112,7 @@ val initialAnimeData = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(currentList: List<Anime>, onItemClick: (Int) -> Unit, onTrailerClick: (String) -> Unit) {
-    // Gunakan delegasi 'mutableStateOf' tapi dengan akses manual jika 'by' bermasalah
+
     val (showMenu, setShowMenu) = remember { mutableStateOf(false) }
     val (showAboutDialog, setShowAboutDialog) = remember { mutableStateOf(false) }
 
@@ -134,7 +134,7 @@ fun HomeScreen(currentList: List<Anime>, onItemClick: (Int) -> Unit, onTrailerCl
                             leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
                             onClick = {
                                 setShowMenu(false)
-                                setShowAboutDialog(true) // Pakai fungsi setter
+                                setShowAboutDialog(true)
                             }
                         )
                     }
@@ -142,7 +142,7 @@ fun HomeScreen(currentList: List<Anime>, onItemClick: (Int) -> Unit, onTrailerCl
             )
         }
     ) { padding ->
-        if (showAboutDialog) { // Langsung panggil variabelnya
+        if (showAboutDialog) {
             AlertDialog(
                 onDismissRequest = { setShowAboutDialog(false) },
                 confirmButton = {
