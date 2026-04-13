@@ -10,4 +10,10 @@
     <string name="status_planned">Plan to Watch</string>
     <string name="status_completed">Completed</string>
     <string name="placeholder_add">Input anime details here...</string>
+    <string name="menu_about">About App</string>
+    <string name="about_title">About NimeList</string>
+    <string name="about_version">Version 1.0</string>
+    <string name="about_developer">Developed by:</string>
+    <string name="about_desc">Simple anime list application for Mobile Programming task - Telkom University.</string>
+    <string name="btn_ok">OK</string>
 </resources>

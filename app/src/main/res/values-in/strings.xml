@@ -11,4 +11,10 @@
     <string name="status_planned">Rencana Tonton</string>
     <string name="status_completed">Selesai</string>
     <string name="placeholder_add">Masukkan detail anime di sini...</string>
+    <string name="menu_about">Tentang Aplikasi</string>
+    <string name="about_title">Tentang NimeList</string>
+    <string name="about_version">Versi 1.0</string>
+    <string name="about_developer">Dikembangkan oleh:</string>
+    <string name="about_desc">Aplikasi daftar anime sederhana untuk tugas Pemrograman Mobile - Universitas Telkom.</string>
+    <string name="btn_ok">Oke</string>
 </resources>

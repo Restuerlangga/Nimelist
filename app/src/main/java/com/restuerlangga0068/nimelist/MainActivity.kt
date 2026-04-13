@@ -1,7 +1,9 @@
 package com.restuerlangga0068.nimelist
 
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,10 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -42,6 +43,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val context = LocalContext.current
 
+                // State List agar data tersimpan selama aplikasi hidup
                 val fullAnimeList = remember { mutableStateListOf(*initialAnimeData.toTypedArray()) }
 
                 NavHost(navController = navController, startDestination = "home") {
@@ -50,7 +52,7 @@ class MainActivity : ComponentActivity() {
                             currentList = fullAnimeList,
                             onItemClick = { animeId -> navController.navigate("review/$animeId") },
                             onTrailerClick = { url ->
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                                 context.startActivity(intent)
                             }
                         )
@@ -88,6 +90,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Model Data
 data class Anime(
     val id: Int,
     val title: String,
@@ -99,18 +102,68 @@ data class Anime(
     val isCompleted: Boolean = false
 )
 
+// Data Awal
 val initialAnimeData = listOf(
-    Anime(1, "Bleach", "Kisah Shinigami pembasmi Hollow.", R.drawable.poster_bleach, "https://youtu.be/W99Ef2LkyOg?si=EAEXotyl8cDfAj6r"),
-    Anime(2, "Naruto", "Perjalanan Uzumaki Naruto menjadi Hokage.", R.drawable.poster_naruto, "https://youtu.be/QczGoCmX-pI?si=mF-vgwpb7drjD99o"),
-    Anime(3, "One Piece", "Petualangan Luffy mencari harta karun.", R.drawable.poster_op, "https://youtu.be/lgAwlnGLTUg?si=mPq3KfMV-_DPhuwp")
+    Anime(1, "Bleach", "Kisah Shinigami pembasmi Hollow.", R.drawable.poster_bleach, "https://youtu.be/W99Ef2LkyOg"),
+    Anime(2, "Naruto", "Perjalanan Uzumaki Naruto menjadi Hokage.", R.drawable.poster_naruto, "https://youtu.be/QczGoCmX-pI"),
+    Anime(3, "One Piece", "Petualangan Luffy mencari harta karun.", R.drawable.poster_op, "https://youtu.be/lgAwlnGLTUg")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(currentList: List<Anime>, onItemClick: (Int) -> Unit, onTrailerClick: (String) -> Unit) {
+    // Gunakan delegasi 'mutableStateOf' tapi dengan akses manual jika 'by' bermasalah
+    val (showMenu, setShowMenu) = remember { mutableStateOf(false) }
+    val (showAboutDialog, setShowAboutDialog) = remember { mutableStateOf(false) }
+
     Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) }
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.app_name)) },
+                actions = {
+                    IconButton(onClick = { setShowMenu(true) }) { // Pakai fungsi setter
+                        Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { setShowMenu(false) }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.menu_about)) },
+                            leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
+                            onClick = {
+                                setShowMenu(false)
+                                setShowAboutDialog(true) // Pakai fungsi setter
+                            }
+                        )
+                    }
+                }
+            )
+        }
     ) { padding ->
+        if (showAboutDialog) { // Langsung panggil variabelnya
+            AlertDialog(
+                onDismissRequest = { setShowAboutDialog(false) },
+                confirmButton = {
+                    TextButton(onClick = { setShowAboutDialog(false) }) {
+                        Text(stringResource(R.string.btn_ok))
+                    }
+                },
+                title = { Text(stringResource(R.string.about_title)) },
+                text = {
+                    Column {
+                        Text(stringResource(R.string.about_version))
+                        Text(stringResource(R.string.about_developer))
+                        Text("Restu Erlangga (2026)", style = MaterialTheme.typography.titleSmall)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(stringResource(R.string.about_desc))
+                    }
+                },
+                icon = { Icon(Icons.Default.Info, contentDescription = null) }
+            )
+        }
+
         LazyColumn(modifier = Modifier.padding(padding)) {
             item {
                 Text(
@@ -141,12 +194,7 @@ fun AnimeCard(anime: Anime, onClick: () -> Unit, onTrailerClick: (String) -> Uni
             )
             Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
                 Text(text = anime.title, style = MaterialTheme.typography.titleLarge)
-
-                Text(
-                    text = anime.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2
-                )
+                Text(text = anime.description, style = MaterialTheme.typography.bodySmall, maxLines = 2)
 
                 if (anime.isCompleted) {
                     SuggestionChip(onClick = {}, label = { Text(stringResource(R.string.status_completed)) })
@@ -190,13 +238,12 @@ fun ReviewScreen(
             TopAppBar(
                 title = { Text(anime?.title ?: "Review") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) { Icon(Icons.Default.ArrowBack, null) }
+                    IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                 },
                 actions = {
                     if (rating > 0 && reviewText.isNotBlank() && isWatched) {
                         IconButton(onClick = {
-                            val msg =
-                                "Review ${anime?.title}:\nRating: ⭐ $rating/5\nReview: $reviewText"
+                            val msg = "Review ${anime?.title}:\nRating: ⭐ $rating/5\nReview: $reviewText"
                             onShareClick(msg)
                         }) {
                             Icon(Icons.Default.Share, contentDescription = "Share")
@@ -207,40 +254,24 @@ fun ReviewScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).padding(16.dp)) {
-            // Memberikan warna merah pada teks jika error (Validasi Checkbox)
             val checkboxColor = if (errorText.contains("Completed")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = isWatched,
-                    onCheckedChange = {
-                        isWatched = it
-                        if (it) errorText = ""
-                    },
-
+                    onCheckedChange = { isWatched = it; if (it) errorText = "" },
                     colors = CheckboxDefaults.colors(
                         uncheckedColor = if (errorText.contains("Completed")) Color.Red else MaterialTheme.colorScheme.outline
                     )
                 )
-                Text(
-                    "Mark as Completed ",
-                    color = checkboxColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text("Mark as Completed", color = checkboxColor, style = MaterialTheme.typography.bodyMedium)
             }
 
-
             if (errorText.contains("Completed")) {
-                Text(
-                    text = errorText,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(start = 12.dp)
-                )
+                Text(text = errorText, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 12.dp))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
             Text("Rating:")
             Row {
                 repeat(5) { index ->
@@ -255,13 +286,9 @@ fun ReviewScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
             OutlinedTextField(
                 value = reviewText,
-                onValueChange = {
-                    reviewText = it
-                    if (it.isNotBlank()) errorText = ""
-                },
+                onValueChange = { reviewText = it; if (it.isNotBlank()) errorText = "" },
                 label = { Text(stringResource(R.string.label_desc)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
@@ -270,16 +297,11 @@ fun ReviewScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
             Button(
                 onClick = {
-                    if (!isWatched) {
-                        errorText = "Tandai 'Completed' dulu sebelum menyimpan!"
-                    } else if (reviewText.isBlank()) {
-                        errorText = "Review tidak boleh kosong!"
-                    } else {
-                        anime?.let { onSaveReview(it.id, rating, reviewText, isWatched) }
-                    }
+                    if (!isWatched) errorText = "Tandai 'Completed' dulu sebelum menyimpan!"
+                    else if (reviewText.isBlank()) errorText = "Review tidak boleh kosong!"
+                    else anime?.let { onSaveReview(it.id, rating, reviewText, isWatched) }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
