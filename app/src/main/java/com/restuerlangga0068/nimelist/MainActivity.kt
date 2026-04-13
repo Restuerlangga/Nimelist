@@ -106,7 +106,11 @@ data class Anime(
 val initialAnimeData = listOf(
     Anime(1, "Bleach", "Kisah Shinigami pembasmi Hollow.", R.drawable.poster_bleach, "https://youtu.be/W99Ef2LkyOg"),
     Anime(2, "Naruto", "Perjalanan Uzumaki Naruto menjadi Hokage.", R.drawable.poster_naruto, "https://youtu.be/QczGoCmX-pI"),
-    Anime(3, "One Piece", "Petualangan Luffy mencari harta karun.", R.drawable.poster_op, "https://youtu.be/lgAwlnGLTUg")
+    Anime(3, "One Piece", "Petualangan Luffy mencari harta karun.", R.drawable.poster_op, "https://youtu.be/lgAwlnGLTUg"),
+    Anime(4, "Bleach 2", "Data Dummy untuk tes scroll.", R.drawable.poster_bleach, "https://youtu.be/W99Ef2LkyOg"),
+    Anime(5, "Naruto 2", "Data Dummy untuk tes scroll.", R.drawable.poster_naruto, "https://youtu.be/QczGoCmX-pI"),
+    Anime(6, "One Piece 2", "Data Dummy untuk tes scroll.", R.drawable.poster_op, "https://youtu.be/lgAwlnGLTUg"),
+    Anime(7, "Bleach 3", "Data Dummy untuk tes scroll.", R.drawable.poster_bleach, "https://youtu.be/W99Ef2LkyOg")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -142,6 +146,7 @@ fun HomeScreen(currentList: List<Anime>, onItemClick: (Int) -> Unit, onTrailerCl
             )
         }
     ) { padding ->
+
         if (showAboutDialog) {
             AlertDialog(
                 onDismissRequest = { setShowAboutDialog(false) },
@@ -164,7 +169,10 @@ fun HomeScreen(currentList: List<Anime>, onItemClick: (Int) -> Unit, onTrailerCl
             )
         }
 
-        LazyColumn(modifier = Modifier.padding(padding)) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding) ) {
             item {
                 Text(
                     text = stringResource(R.string.header_title),
