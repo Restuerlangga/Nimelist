@@ -100,9 +100,9 @@ data class Anime(
 )
 
 val initialAnimeData = listOf(
-    Anime(1, "Bleach", "Kisah Shinigami pembasmi Hollow.", R.drawable.poster_bleach, "https://www.youtube.com/watch?v=BE7Sclp5id0"),
-    Anime(2, "Naruto", "Perjalanan Uzumaki Naruto menjadi Hokage.", R.drawable.poster_naruto, "https://www.youtube.com/watch?v=-G9BqkgZXRA"),
-    Anime(3, "One Piece", "Petualangan Luffy mencari harta karun.", R.drawable.poster_op, "https://www.youtube.com/watch?v=l_98K4_6uLU")
+    Anime(1, "Bleach", "Kisah Shinigami pembasmi Hollow.", R.drawable.poster_bleach, "https://youtu.be/W99Ef2LkyOg?si=EAEXotyl8cDfAj6r"),
+    Anime(2, "Naruto", "Perjalanan Uzumaki Naruto menjadi Hokage.", R.drawable.poster_naruto, "https://youtu.be/QczGoCmX-pI?si=mF-vgwpb7drjD99o"),
+    Anime(3, "One Piece", "Petualangan Luffy mencari harta karun.", R.drawable.poster_op, "https://youtu.be/lgAwlnGLTUg?si=mPq3KfMV-_DPhuwp")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,6 +141,8 @@ fun AnimeCard(anime: Anime, onClick: () -> Unit, onTrailerClick: (String) -> Uni
             )
             Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
                 Text(text = anime.title, style = MaterialTheme.typography.titleLarge)
+
+
 
                 if (anime.isCompleted) {
                     SuggestionChip(onClick = {}, label = { Text(stringResource(R.string.status_completed)) })
