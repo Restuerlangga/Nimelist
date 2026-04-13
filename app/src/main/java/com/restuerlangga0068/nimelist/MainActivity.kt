@@ -193,11 +193,14 @@ fun ReviewScreen(
                     IconButton(onClick = onBackClick) { Icon(Icons.Default.ArrowBack, null) }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        val msg = "Review ${anime?.title}:\nRating: ⭐ $rating/5\nReview: $reviewText"
-                        onShareClick(msg)
-                    }) {
-                        Icon(Icons.Default.Share, contentDescription = "Share")
+                    if (rating > 0 && reviewText.isNotBlank() && isWatched) {
+                        IconButton(onClick = {
+                            val msg =
+                                "Review ${anime?.title}:\nRating: ⭐ $rating/5\nReview: $reviewText"
+                            onShareClick(msg)
+                        }) {
+                            Icon(Icons.Default.Share, contentDescription = "Share")
+                        }
                     }
                 }
             )
