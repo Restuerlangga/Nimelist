@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NimeList</string>
+    <string name="header_title">Daftar Anime Saya</string>
+    <string name="btn_add">Tambah Anime</string>
+    <string name="label_title">Judul Anime</string>
+    <string name="label_desc">Deskripsi</string>
+    <string name="btn_trailer">Tonton Trailer</string>
+    <string name="btn_save">Simpan Anime</string>
+    <string name="status_watching">Sedang Ditonton</string>
+    <string name="status_planned">Rencana Tonton</string>
+    <string name="status_completed">Selesai</string>
+    <string name="placeholder_add">Masukkan detail anime di sini...</string>
+</resources>
