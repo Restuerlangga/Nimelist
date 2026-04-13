@@ -142,7 +142,11 @@ fun AnimeCard(anime: Anime, onClick: () -> Unit, onTrailerClick: (String) -> Uni
             Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
                 Text(text = anime.title, style = MaterialTheme.typography.titleLarge)
 
-
+                Text(
+                    text = anime.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2
+                )
 
                 if (anime.isCompleted) {
                     SuggestionChip(onClick = {}, label = { Text(stringResource(R.string.status_completed)) })
