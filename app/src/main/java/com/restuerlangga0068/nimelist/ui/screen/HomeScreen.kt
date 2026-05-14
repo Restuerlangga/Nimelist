@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
@@ -36,7 +37,7 @@ fun HomeScreen(
     val (showMenu, setShowMenu) = remember { mutableStateOf(false) }
     val (showAboutDialog, setShowAboutDialog) = remember { mutableStateOf(false) }
 
-    // Mengambil data dari Room database
+
     val animeList by viewModel.data.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -62,6 +63,14 @@ fun HomeScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { onItemClick(-1) },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Tambah Anime")
+            }
         }
     ) { innerPadding ->
 
@@ -119,7 +128,7 @@ fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit, onTrailerClick: (String) 
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
 
             Image(
-                painter = painterResource(id = anime.FimageRes),
+                painter = painterResource(id = anime.imageRes),
                 contentDescription = null,
                 modifier = Modifier
                     .size(90.dp)
@@ -138,13 +147,7 @@ fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit, onTrailerClick: (String) 
                     Text("⭐ ${anime.rating}/5", color = Color(0xFFFFD700))
                 }
 
-                Button(
-                    onClick = { onTrailerClick(anime.trailerUrl) },
-                    modifier = Modifier.padding(top = 4.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                ) {
-                    Text(text = stringResource(R.string.btn_trailer), style = MaterialTheme.typography.labelSmall)
-                }
+
             }
         }
     }

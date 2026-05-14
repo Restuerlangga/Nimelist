@@ -12,7 +12,6 @@ data class AnimeEntity(
     val rating: Float,
     val review: String,
     val isCompleted: Boolean,
-    val FimageRes: Int,
     val imageRes: Int,
-    val trailerUrl: String
+
 )

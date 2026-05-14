@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 class MainViewModel(dao: AnimeDao) : ViewModel() {
-
     val data: StateFlow<List<AnimeEntity>> = dao.getAllAnime().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000L),

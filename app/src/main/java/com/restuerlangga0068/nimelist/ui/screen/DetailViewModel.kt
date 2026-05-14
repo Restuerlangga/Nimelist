@@ -31,6 +31,7 @@ class DetailViewModel(private val dao: AnimeDao) : ViewModel() {
     }
 
     suspend fun getAnimeById(id: Int): AnimeEntity? {
+        if (id == -1) return null
         return dao.getAnimeById(id)
     }
 }
