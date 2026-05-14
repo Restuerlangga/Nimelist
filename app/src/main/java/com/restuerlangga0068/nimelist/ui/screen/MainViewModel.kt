@@ -19,6 +19,16 @@ class MainViewModel(private val dao: AnimeDao, private val pref: UserPreferences
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
 
+    val isDarkMode: StateFlow<Boolean> = pref.isDarkMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
+
+
+    fun toggleTheme(current: Boolean) {
+        viewModelScope.launch {
+            pref.saveThemeSetting(!current)
+        }
+    }
+
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val animeList: StateFlow<List<AnimeEntity>> = isSortedByRating.flatMapLatest { byRating ->
         if (byRating) dao.getAllAnimeSortedByRating()

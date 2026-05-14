@@ -8,7 +8,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Star
@@ -39,7 +41,7 @@ fun HomeScreen(
     val (showMenu, setShowMenu) = remember { mutableStateOf(false) }
     val (showAboutDialog, setShowAboutDialog) = remember { mutableStateOf(false) }
     val isByRating by viewModel.isSortedByRating.collectAsStateWithLifecycle()
-
+    val isDark by viewModel.isDarkMode.collectAsStateWithLifecycle()
     val animeList by viewModel.animeList.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -53,10 +55,25 @@ fun HomeScreen(
                             contentDescription = "Sort"
                         )
                     }
+
+                    IconButton(onClick = { setShowMenu(true) }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                    }
+
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { setShowMenu(false) }
                     ) {
+                        DropdownMenuItem(
+                            text = { Text(if (isDark) "Mode Terang" else "Mode Gelap") },
+                            leadingIcon = {
+                                Icon(if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode, null)
+                            },
+                            onClick = {
+                                setShowMenu(false)
+                                viewModel.toggleTheme(isDark)
+                            }
+                        )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_about)) },
                             leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
@@ -158,6 +175,7 @@ fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit) {
 
 @Composable
 fun AboutDialog(onDismiss: () -> Unit) {
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {

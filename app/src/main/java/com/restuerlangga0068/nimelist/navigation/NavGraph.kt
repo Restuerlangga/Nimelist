@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,7 +18,9 @@ import com.restuerlangga0068.nimelist.ui.screen.ReviewScreen
 import com.restuerlangga0068.nimelist.util.ViewModelFactory
 
 @Composable
-fun NimeNavGraph(factory: ViewModelFactory) {
+fun NimeNavGraph(viewModel: MainViewModel,
+                 factory: ViewModelFactory,
+                 navController: NavHostController = rememberNavController()) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
@@ -25,17 +28,16 @@ fun NimeNavGraph(factory: ViewModelFactory) {
 
         // HALAMAN HOME
         composable("home") {
-            val mainViewModel: MainViewModel = viewModel(factory = factory) // Samakan nama variabel
-            HomeScreen(
-                viewModel = mainViewModel,
-                onItemClick = { id ->
-                    navController.navigate("review/$id")
-                }
 
+            HomeScreen(
+                viewModel = viewModel,
+                onItemClick = { animeId ->
+                    navController.navigate("review/$animeId")
+                }
             )
         }
 
-        // HALAMAN REVIEW (EDIT/DETAIL)
+
         composable(
             route = "review/{animeId}",
             arguments = listOf(navArgument("animeId") { type = NavType.IntType }) // Tambahkan argumen tipe Int
