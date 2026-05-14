@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.Button
@@ -71,6 +72,7 @@ fun ReviewScreen(
 
     var title by remember { mutableStateOf("") }
     var imageIndex by remember { mutableIntStateOf(0) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var selectedImageRes by remember { mutableIntStateOf(android.R.drawable.ic_menu_gallery) }
 
     var rating by remember { mutableStateOf(0f) }
@@ -102,9 +104,12 @@ fun ReviewScreen(
                 actions = {
                     if (animeId != -1) {
                         IconButton(onClick = {
-                            viewModel.delete(animeId)
-                            onBackClick()
+                            onShareClick("Review Anime $title: $review (Rating: $rating/5)")
+
                         }) {
+                            Icon(Icons.Default.Share, contentDescription = "Share")
+                        }
+                        IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = Color.Red)
                         }
                     }
@@ -112,6 +117,29 @@ fun ReviewScreen(
             )
         }
     ) { padding ->
+        if (showDeleteDialog) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Hapus Anime?") },
+                text = { Text("Apakah kamu yakin ingin menghapus '$title' dari list?") },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(
+                        onClick = {
+                            viewModel.delete(animeId)
+                            showDeleteDialog = false
+                            onBackClick()
+                        }
+                    ) {
+                        Text("Hapus", color = Color.Red)
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Batal")
+                    }
+                }
+            )
+        }
         Column(modifier = Modifier
             .padding(padding)
             .padding(16.dp)
