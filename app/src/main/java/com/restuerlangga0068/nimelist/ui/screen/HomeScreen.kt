@@ -2,37 +2,16 @@ package com.restuerlangga0068.nimelist.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -43,26 +22,31 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.restuerlangga0068.nimelist.R
-import com.restuerlangga0068.nimelist.data.Anime
-
+import com.restuerlangga0068.nimelist.database.AnimeEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(currentList: List<Anime>, onItemClick: (Int) -> Unit, onTrailerClick: (String) -> Unit) {
-
+fun HomeScreen(
+    viewModel: MainViewModel,
+    onItemClick: (Int) -> Unit,
+    onTrailerClick: (String) -> Unit
+) {
     val (showMenu, setShowMenu) = remember { mutableStateOf(false) }
     val (showAboutDialog, setShowAboutDialog) = remember { mutableStateOf(false) }
+
+    // Mengambil data dari Room database
+    val animeList by viewModel.data.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
-                    IconButton(onClick = { setShowMenu(true) }) { // Pakai fungsi setter
+                    IconButton(onClick = { setShowMenu(true) }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Menu")
                     }
-
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { setShowMenu(false) }
@@ -79,34 +63,13 @@ fun HomeScreen(currentList: List<Anime>, onItemClick: (Int) -> Unit, onTrailerCl
                 }
             )
         }
-    ) { padding ->
-
-        if (showAboutDialog) {
-            AlertDialog(
-                onDismissRequest = { setShowAboutDialog(false) },
-                confirmButton = {
-                    TextButton(onClick = { setShowAboutDialog(false) }) {
-                        Text(stringResource(R.string.btn_ok))
-                    }
-                },
-                title = { Text(stringResource(R.string.about_title)) },
-                text = {
-                    Column {
-                        Text(stringResource(R.string.about_version))
-                        Text(stringResource(R.string.about_developer))
-                        Text("Restu Erlangga (2026)", style = MaterialTheme.typography.titleSmall)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(stringResource(R.string.about_desc))
-                    }
-                },
-                icon = { Icon(Icons.Default.Info, contentDescription = null) }
-            )
-        }
+    ) { innerPadding ->
 
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding) ) {
+                .padding(innerPadding)
+        ) {
             item {
                 Text(
                     text = stringResource(R.string.header_title),
@@ -114,24 +77,53 @@ fun HomeScreen(currentList: List<Anime>, onItemClick: (Int) -> Unit, onTrailerCl
                     modifier = Modifier.padding(16.dp)
                 )
             }
-            items(currentList) { anime ->
-                AnimeCard(anime, onClick = { onItemClick(anime.id) }, onTrailerClick = onTrailerClick)
+
+            if (animeList.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxHeight(0.8f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Belum ada daftar anime.")
+                    }
+                }
+            } else {
+
+                items(animeList, key = { it.id }) { anime ->
+                    AnimeCard(
+                        anime = anime,
+                        onClick = { onItemClick(anime.id) },
+                        onTrailerClick = onTrailerClick
+                    )
+                }
             }
+        }
+
+        if (showAboutDialog) {
+            AboutDialog(onDismiss = { setShowAboutDialog(false) })
         }
     }
 }
 
 @Composable
-fun AnimeCard(anime: Anime, onClick: () -> Unit, onTrailerClick: (String) -> Unit) {
+fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit, onTrailerClick: (String) -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp).clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+
             Image(
-                painter = painterResource(id = anime.imageRes),
+                painter = painterResource(id = anime.FimageRes),
                 contentDescription = null,
-                modifier = Modifier.size(90.dp).clip(RoundedCornerShape(8.dp)),
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
             Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
@@ -142,12 +134,8 @@ fun AnimeCard(anime: Anime, onClick: () -> Unit, onTrailerClick: (String) -> Uni
                     SuggestionChip(onClick = {}, label = { Text(stringResource(R.string.status_completed)) })
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (anime.rating > 0) {
-                        Text("⭐ ${anime.rating}/5", color = Color(0xFFFFD700))
-                    } else {
-                        Text(stringResource(R.string.placeholder_add), style = MaterialTheme.typography.bodySmall)
-                    }
+                if (anime.rating > 0) {
+                    Text("⭐ ${anime.rating}/5", color = Color(0xFFFFD700))
                 }
 
                 Button(
@@ -160,4 +148,27 @@ fun AnimeCard(anime: Anime, onClick: () -> Unit, onTrailerClick: (String) -> Uni
             }
         }
     }
+}
+
+@Composable
+fun AboutDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_ok))
+            }
+        },
+        title = { Text(stringResource(R.string.about_title)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.about_version))
+                Text(stringResource(R.string.about_developer))
+                Text("Restu Erlangga", style = MaterialTheme.typography.titleSmall)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(stringResource(R.string.about_desc))
+            }
+        },
+        icon = { Icon(Icons.Default.Info, contentDescription = null) }
+    )
 }

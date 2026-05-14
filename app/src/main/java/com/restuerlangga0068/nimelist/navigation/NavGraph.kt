@@ -2,53 +2,54 @@ package com.restuerlangga0068.nimelist.navigation
 
 import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.restuerlangga0068.nimelist.data.Anime
+import androidx.navigation.navArgument
+import com.restuerlangga0068.nimelist.ui.screen.DetailViewModel
 import com.restuerlangga0068.nimelist.ui.screen.HomeScreen
+import com.restuerlangga0068.nimelist.ui.screen.MainViewModel
 import com.restuerlangga0068.nimelist.ui.screen.ReviewScreen
-
+import com.restuerlangga0068.nimelist.util.ViewModelFactory
 
 @Composable
-fun NimeNavGraph(fullAnimeList: SnapshotStateList<Anime>) {
+fun NimeNavGraph(factory: ViewModelFactory) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-
-
     NavHost(navController = navController, startDestination = "home") {
+
+        // HALAMAN HOME
         composable("home") {
+            val mainViewModel: MainViewModel = viewModel(factory = factory) // Samakan nama variabel
             HomeScreen(
-                currentList = fullAnimeList,
-                onItemClick = { animeId -> navController.navigate("review/$animeId") },
+                viewModel = mainViewModel,
+                onItemClick = { id ->
+                    navController.navigate("review/$id")
+                },
                 onTrailerClick = { url ->
                     val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                     context.startActivity(intent)
                 }
             )
         }
-        composable("review/{animeId}") { backStackEntry ->
-            val animeId = backStackEntry.arguments?.getString("animeId")?.toInt()
-            val selectedAnime = fullAnimeList.find { it.id == animeId }
+
+        // HALAMAN REVIEW (EDIT/DETAIL)
+        composable(
+            route = "review/{animeId}",
+            arguments = listOf(navArgument("animeId") { type = NavType.IntType }) // Tambahkan argumen tipe Int
+        ) { backStackEntry ->
+            val animeId = backStackEntry.arguments?.getInt("animeId") ?: -1
+            val detailViewModel: DetailViewModel = viewModel(factory = factory)
 
             ReviewScreen(
-                anime = selectedAnime,
+                animeId = animeId, // Pakai variabel animeId hasil getInt
+                viewModel = detailViewModel, // Kirim viewModel ke screen
                 onBackClick = { navController.popBackStack() },
-                onSaveReview = { id, rating, review, isWatched ->
-                    val index = fullAnimeList.indexOfFirst { it.id == id }
-                    if (index != -1) {
-                        fullAnimeList[index] = fullAnimeList[index].copy(
-                            rating = rating,
-                            review = review,
-                            isCompleted = isWatched
-                        )
-                    }
-                    navController.popBackStack()
-                },
                 onShareClick = { text ->
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
@@ -60,4 +61,3 @@ fun NimeNavGraph(fullAnimeList: SnapshotStateList<Anime>) {
         }
     }
 }
-
