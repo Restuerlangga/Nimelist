@@ -30,11 +30,8 @@ fun NimeNavGraph(factory: ViewModelFactory) {
                 viewModel = mainViewModel,
                 onItemClick = { id ->
                     navController.navigate("review/$id")
-                },
-                onTrailerClick = { url ->
-                    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                    context.startActivity(intent)
                 }
+
             )
         }
 

@@ -11,6 +11,7 @@ import com.restuerlangga0068.nimelist.data.initialAnimeData
 import com.restuerlangga0068.nimelist.database.AnimeDb
 import com.restuerlangga0068.nimelist.navigation.NimeNavGraph
 import com.restuerlangga0068.nimelist.ui.theme.NimeListTheme
+import com.restuerlangga0068.nimelist.util.UserPreferences
 import com.restuerlangga0068.nimelist.util.ViewModelFactory
 
 
@@ -20,9 +21,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val database = AnimeDb.getInstance(this)
         val dao = database.dao()
+        val pref = UserPreferences(this)
 
-        val factory = ViewModelFactory(dao
-        )
+        val factory = ViewModelFactory(dao, pref)
         setContent {
             NimeListTheme {
 

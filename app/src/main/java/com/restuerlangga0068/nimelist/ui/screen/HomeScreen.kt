@@ -10,6 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,21 +34,24 @@ import com.restuerlangga0068.nimelist.database.AnimeEntity
 fun HomeScreen(
     viewModel: MainViewModel,
     onItemClick: (Int) -> Unit,
-    onTrailerClick: (String) -> Unit
+
 ) {
     val (showMenu, setShowMenu) = remember { mutableStateOf(false) }
     val (showAboutDialog, setShowAboutDialog) = remember { mutableStateOf(false) }
+    val isByRating by viewModel.isSortedByRating.collectAsStateWithLifecycle()
 
-
-    val animeList by viewModel.data.collectAsStateWithLifecycle()
+    val animeList by viewModel.animeList.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
-                    IconButton(onClick = { setShowMenu(true) }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                    IconButton(onClick = { viewModel.toggleSort(isByRating) }) {
+                        Icon(
+                            imageVector = if (isByRating) Icons.Default.Star else Icons.Default.SortByAlpha,
+                            contentDescription = "Sort"
+                        )
                     }
                     DropdownMenu(
                         expanded = showMenu,
@@ -99,12 +104,10 @@ fun HomeScreen(
                     }
                 }
             } else {
-
                 items(animeList, key = { it.id }) { anime ->
                     AnimeCard(
                         anime = anime,
-                        onClick = { onItemClick(anime.id) },
-                        onTrailerClick = onTrailerClick
+                        onClick = { onItemClick(anime.id) }
                     )
                 }
             }
@@ -117,7 +120,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit, onTrailerClick: (String) -> Unit) {
+fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()

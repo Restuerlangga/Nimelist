@@ -20,4 +20,7 @@ interface AnimeDao {
 
     @Query("SELECT * FROM anime WHERE id = :id")
     suspend fun getAnimeById(id: Int): AnimeEntity?
+
+    @Query("SELECT * FROM anime ORDER BY rating DESC")
+    fun getAllAnimeSortedByRating(): Flow<List<AnimeEntity>>
 }
