@@ -71,6 +71,7 @@ fun ReviewScreen(
 
 
     var title by remember { mutableStateOf("") }
+    var descriptionState by remember { mutableStateOf("") }
     var imageIndex by remember { mutableIntStateOf(0) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var selectedImageRes by remember { mutableIntStateOf(android.R.drawable.ic_menu_gallery) }
@@ -86,6 +87,7 @@ fun ReviewScreen(
             anime = data
             data?.let {
                 title = it.title
+                descriptionState = it.description
                 rating = it.rating
                 review = it.review
                 isWatched = it.isCompleted
@@ -185,7 +187,7 @@ fun ReviewScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- CHECKBOX & RATING (Sama seperti sebelumnya) ---
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = isWatched, onCheckedChange = { isWatched = it })
                 Text("Mark as Completed")
@@ -209,9 +211,17 @@ fun ReviewScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
+                value = descriptionState,
+                onValueChange = { descriptionState = it },
+                label = { Text(stringResource(R.string.label_desc)) },
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 3
+            )
+
+            OutlinedTextField(
                 value = review,
                 onValueChange = { review = it },
-                label = { Text(stringResource(R.string.label_desc)) },
+                label = { Text("Review")},
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
@@ -230,7 +240,7 @@ fun ReviewScreen(
                         if (animeId == -1) {
                             val newAnime = AnimeEntity(
                                 title = title,
-                                description = "Anime ditambahkan secara manual",
+                                description = descriptionState,
                                 rating = rating,
                                 review = review,
                                 isCompleted = isWatched,
@@ -245,6 +255,7 @@ fun ReviewScreen(
                             anime?.let {
                                 viewModel.update(it.copy(
                                     rating = rating,
+                                    description = descriptionState,
                                     review = review,
                                     isCompleted = isWatched
                                 ))
