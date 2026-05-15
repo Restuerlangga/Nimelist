@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AnimeDao {
-    @Query("SELECT * FROM anime ORDER BY id DESC")
+    @Query("SELECT * FROM anime ORDER BY title ASC")
     fun getAllAnime(): Flow<List<AnimeEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -23,4 +23,6 @@ interface AnimeDao {
 
     @Query("SELECT * FROM anime ORDER BY rating DESC")
     fun getAllAnimeSortedByRating(): Flow<List<AnimeEntity>>
+
+
 }

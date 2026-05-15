@@ -3,7 +3,6 @@ package com.restuerlangga0068.nimelist.navigation
 import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -26,7 +25,7 @@ fun NimeNavGraph(viewModel: MainViewModel,
 
     NavHost(navController = navController, startDestination = "home") {
 
-        // HALAMAN HOME
+        // HOME
         composable("home") {
 
             HomeScreen(
@@ -40,14 +39,14 @@ fun NimeNavGraph(viewModel: MainViewModel,
 
         composable(
             route = "review/{animeId}",
-            arguments = listOf(navArgument("animeId") { type = NavType.IntType }) // Tambahkan argumen tipe Int
+            arguments = listOf(navArgument("animeId") { type = NavType.IntType })
         ) { backStackEntry ->
             val animeId = backStackEntry.arguments?.getInt("animeId") ?: -1
             val detailViewModel: DetailViewModel = viewModel(factory = factory)
 
             ReviewScreen(
-                animeId = animeId, // Pakai variabel animeId hasil getInt
-                viewModel = detailViewModel, // Kirim viewModel ke screen
+                animeId = animeId,
+                viewModel = detailViewModel,
                 onBackClick = { navController.popBackStack() },
                 onShareClick = { text ->
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
