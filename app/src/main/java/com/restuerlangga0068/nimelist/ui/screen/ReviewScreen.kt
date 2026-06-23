@@ -1,14 +1,6 @@
 package com.restuerlangga0068.nimelist.ui.screen
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -18,80 +10,51 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.restuerlangga0068.nimelist.R
 import com.restuerlangga0068.nimelist.database.AnimeEntity
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewScreen(
-    animeId: Int,
+    animeId: String,
     viewModel: DetailViewModel,
     onBackClick: () -> Unit,
     onShareClick: (String) -> Unit
 ) {
-    val listPoster = listOf(
-        R.drawable.poster1,
-        R.drawable.poster2,
-        R.drawable.poster3,
-        R.drawable.poster4,
-        R.drawable.poster5,
-        R.drawable.poster6,
-        R.drawable.poster7,
-        R.drawable.poster8,
-        R.drawable.poster9,
-        R.drawable.poster10,
-        android.R.drawable.ic_menu_gallery
-    )
     var anime by remember { mutableStateOf<AnimeEntity?>(null) }
-
-
     var title by remember { mutableStateOf("") }
     var descriptionState by remember { mutableStateOf("") }
-    var imageIndex by remember { mutableIntStateOf(0) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var selectedImageRes by remember { mutableIntStateOf(android.R.drawable.ic_menu_gallery) }
-
-    var rating by remember { mutableStateOf(0f) }
+    var imageUrl by remember { mutableStateOf("") }
+    var rating by remember { mutableFloatStateOf(0f) }
     var review by remember { mutableStateOf("") }
     var isWatched by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val isNew = animeId == "new" // Gunakan string "new" untuk penanda data baru
 
     LaunchedEffect(animeId) {
-        if (animeId != -1) {
+        if (!isNew) {
             val data = viewModel.getAnimeById(animeId)
             anime = data
             data?.let {
                 title = it.title
-                descriptionState = it.description
-                rating = it.rating
-                review = it.review
+                descriptionState = it.description ?: ""
+                rating = it.rating.toFloat()
+                review = it.review ?: ""
                 isWatched = it.isCompleted
-                selectedImageRes = it.imageRes
+                imageUrl = it.imageUrl ?: ""
             }
         }
     }
@@ -99,16 +62,13 @@ fun ReviewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (animeId == -1) "Tambah Anime Baru" else title) },
+                title = { Text(if (isNew) "Tambah Anime Baru" else title) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                 },
                 actions = {
-                    if (animeId != -1) {
-                        IconButton(onClick = {
-                            onShareClick("Review Anime $title: $review (Rating: $rating/5)")
-
-                        }) {
+                    if (!isNew) {
+                        IconButton(onClick = { onShareClick("Review Anime $title: $review (Rating: $rating/5)") }) {
                             Icon(Icons.Default.Share, contentDescription = "Share")
                         }
                         IconButton(onClick = { showDeleteDialog = true }) {
@@ -120,80 +80,51 @@ fun ReviewScreen(
         }
     ) { padding ->
         if (showDeleteDialog) {
-            androidx.compose.material3.AlertDialog(
+            AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
                 title = { Text("Hapus Anime?") },
-                text = { Text("Apakah kamu yakin ingin menghapus '$title' dari list?") },
+                text = { Text("Apakah kamu yakin ingin menghapus '$title'?") },
                 confirmButton = {
-                    androidx.compose.material3.TextButton(
-                        onClick = {
-                            viewModel.delete(animeId)
-                            showDeleteDialog = false
-                            onBackClick()
-                        }
-                    ) {
-                        Text("Hapus", color = Color.Red)
-                    }
+                    TextButton(onClick = {
+                        viewModel.delete(animeId)
+                        onBackClick()
+                    }) { Text("Hapus", color = Color.Red) }
                 },
-                dismissButton = {
-                    androidx.compose.material3.TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Batal")
-                    }
-                }
+                dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Batal") } }
             )
         }
+
         Column(modifier = Modifier
             .padding(padding)
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
         ) {
-
-            Text("Gambar Anime:", style = MaterialTheme.typography.titleMedium)
+            Text("Gambar Anime (URL):", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = selectedImageRes),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-
-                if (animeId == -1) {
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Button(onClick = {
-
-                        imageIndex = (imageIndex + 1) % listPoster.size
-                        selectedImageRes = listPoster[imageIndex]
-                    }) {
-                        Text("Ganti Gambar")
-                    }
-                }
-            }
+            AsyncImage(
+                model = imageUrl.ifBlank { "https://via.placeholder.com/150" },
+                contentDescription = null,
+                modifier = Modifier.size(120.dp).clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
-
 
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
                 label = { Text("Judul Anime") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = animeId == -1,
-                isError = errorText.contains("Judul")
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = isWatched, onCheckedChange = { isWatched = it })
                 Text("Mark as Completed")
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
             Text("Rating:")
             Row {
                 repeat(5) { index ->
@@ -208,8 +139,6 @@ fun ReviewScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
             OutlinedTextField(
                 value = descriptionState,
                 onValueChange = { descriptionState = it },
@@ -221,40 +150,32 @@ fun ReviewScreen(
             OutlinedTextField(
                 value = review,
                 onValueChange = { review = it },
-                label = { Text("Review")},
+                label = { Text("Review") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
-
-            if (errorText.isNotEmpty()) {
-                Text(errorText, color = Color.Red, style = MaterialTheme.typography.labelSmall)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
                     if (title.isBlank()) {
                         errorText = "Judul tidak boleh kosong!"
                     } else {
-                        if (animeId == -1) {
+                        if (isNew) {
                             val newAnime = AnimeEntity(
+                                id = UUID.randomUUID().toString(),
                                 title = title,
                                 description = descriptionState,
-                                rating = rating,
+                                rating = rating.toDouble(),
                                 review = review,
                                 isCompleted = isWatched,
-                                imageRes = selectedImageRes,
-
+                                imageUrl = imageUrl
                             )
-
                             viewModel.insert(newAnime)
-
                         } else {
-
                             anime?.let {
                                 viewModel.update(it.copy(
-                                    rating = rating,
+                                    title = title,
+                                    rating = rating.toDouble(),
                                     description = descriptionState,
                                     review = review,
                                     isCompleted = isWatched
@@ -265,9 +186,7 @@ fun ReviewScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Simpan")
-            }
+            ) { Text("Simpan") }
         }
     }
 }

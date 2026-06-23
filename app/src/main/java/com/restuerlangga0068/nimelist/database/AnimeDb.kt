@@ -1,12 +1,12 @@
 package com.restuerlangga0068.nimelist.database
 
-import com.restuerlangga0068.nimelist.data.local.AnimeDao
+
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [AnimeEntity::class], version = 1, exportSchema = false)
+@Database(entities = [AnimeEntity::class], version = 2, exportSchema = false)
 abstract class AnimeDb : RoomDatabase() {
 
     abstract fun dao(): AnimeDao
@@ -24,11 +24,14 @@ abstract class AnimeDb : RoomDatabase() {
                         context.applicationContext,
                         AnimeDb::class.java,
                         "anime.db"
-                    ).build()
+                    )
+                        .fallbackToDestructiveMigration()
+                        .build()
                     INSTANCE = instance
                 }
                 return instance
             }
         }
+
     }
 }

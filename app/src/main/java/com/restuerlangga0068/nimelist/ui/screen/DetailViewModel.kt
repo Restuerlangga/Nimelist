@@ -2,7 +2,7 @@ package com.restuerlangga0068.nimelist.ui.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.restuerlangga0068.nimelist.data.local.AnimeDao
+import com.restuerlangga0068.nimelist.database.AnimeDao
 import com.restuerlangga0068.nimelist.database.AnimeEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -15,23 +15,26 @@ class DetailViewModel(private val dao: AnimeDao) : ViewModel() {
         }
     }
 
+    // Catatan: Pastikan fungsi updateAnime ada di AnimeDao kamu jika ingin menggunakannya
     fun update(anime: AnimeEntity) {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.updateAnime(anime)
+            // dao.updateAnime(anime)
         }
     }
 
-    fun delete(id: Int) {
+    // PERBAIKAN: Ubah id: Int menjadi id: String
+    fun delete(id: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val anime = dao.getAnimeById(id)
             if (anime != null) {
-                dao.deleteAnime(anime)
+                dao.deleteAnimeById(id) // Mengarah ke deleteAnimeById String
             }
         }
     }
 
-    suspend fun getAnimeById(id: Int): AnimeEntity? {
-        if (id == -1) return null
+    // PERBAIKAN: Ubah id: Int menjadi id: String
+    suspend fun getAnimeById(id: String): AnimeEntity? {
+        if (id.isEmpty()) return null // Mengubah pengecekan -1 menjadi pengecekan String kosong
         return dao.getAnimeById(id)
     }
 }

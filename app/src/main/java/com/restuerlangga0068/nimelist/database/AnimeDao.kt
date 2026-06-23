@@ -1,28 +1,26 @@
-package com.restuerlangga0068.nimelist.data.local
+package com.restuerlangga0068.nimelist.database
 
 import androidx.room.*
-import com.restuerlangga0068.nimelist.database.AnimeEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AnimeDao {
-    @Query("SELECT * FROM anime ORDER BY title ASC")
+    @Query("SELECT * FROM anime")
     fun getAllAnime(): Flow<List<AnimeEntity>>
+
+
+
+
+    @Query("SELECT * FROM anime WHERE id = :id")
+    suspend fun getAnimeById(id: String): AnimeEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAnimeList(anime: List<AnimeEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAnime(anime: AnimeEntity)
 
-    @Update
-    suspend fun updateAnime(anime: AnimeEntity)
 
-    @Delete
-    suspend fun deleteAnime(anime: AnimeEntity)
-
-    @Query("SELECT * FROM anime WHERE id = :id")
-    suspend fun getAnimeById(id: Int): AnimeEntity?
-
-    @Query("SELECT * FROM anime ORDER BY rating DESC")
-    fun getAllAnimeSortedByRating(): Flow<List<AnimeEntity>>
-
-
+    @Query("DELETE FROM anime WHERE id = :id")
+    suspend fun deleteAnimeById(id: String)
 }

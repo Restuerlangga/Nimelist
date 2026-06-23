@@ -20,7 +20,7 @@ import com.restuerlangga0068.nimelist.util.ViewModelFactory
 fun NimeNavGraph(viewModel: MainViewModel,
                  factory: ViewModelFactory,
                  navController: NavHostController = rememberNavController()) {
-    val navController = rememberNavController()
+
     val context = LocalContext.current
 
     NavHost(navController = navController, startDestination = "home") {
@@ -32,6 +32,10 @@ fun NimeNavGraph(viewModel: MainViewModel,
                 viewModel = viewModel,
                 onItemClick = { animeId ->
                     navController.navigate("review/$animeId")
+                },
+                onAddClick = {
+                    // Tambahkan navigasi ke rute baru untuk tambah data
+                    navController.navigate("review/new")
                 }
             )
         }
@@ -39,9 +43,9 @@ fun NimeNavGraph(viewModel: MainViewModel,
 
         composable(
             route = "review/{animeId}",
-            arguments = listOf(navArgument("animeId") { type = NavType.IntType })
+            arguments = listOf(navArgument("animeId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val animeId = backStackEntry.arguments?.getInt("animeId") ?: -1
+            val animeId = backStackEntry.arguments?.getString("animeId") ?: "new"
             val detailViewModel: DetailViewModel = viewModel(factory = factory)
 
             ReviewScreen(
