@@ -23,4 +23,7 @@ interface AnimeDao {
 
     @Query("DELETE FROM anime WHERE id = :id")
     suspend fun deleteAnimeById(id: String)
+
+
+
 }

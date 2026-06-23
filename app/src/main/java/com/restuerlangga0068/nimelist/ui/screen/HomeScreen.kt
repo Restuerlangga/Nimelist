@@ -45,6 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +69,7 @@ import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.datastore.dataStore
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -102,6 +104,15 @@ fun HomeScreen(
     var showProfileDialog by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
 
+
+
+    LaunchedEffect(user.email) {
+        if (user.email.isNotEmpty()) {
+            viewModel.saveLoginToPreferences(user.name, user.email, user.photoUrl)
+        }
+    }
+
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -109,7 +120,7 @@ fun HomeScreen(
                 actions = {
                    IconButton(onClick = {
                        if (user.email.isEmpty()) {
-                           CoroutineScope(Dispatchers.IO).launch { signIn(context, dataStore) }
+                           CoroutineScope(Dispatchers.IO).launch { signIn(context, dataStore, viewModel) }
                        }
                        else {
                            showDialog = true
@@ -230,7 +241,7 @@ fun HomeScreen(
                 user = user,
                 onDismissRequest = { showDialog = false}
                 ) {
-                CoroutineScope(Dispatchers.IO).launch { signOut(context, dataStore) }
+                CoroutineScope(Dispatchers.IO).launch { signOut(context, dataStore, viewModel) }
                 showDialog = false
             }
         }
@@ -253,7 +264,8 @@ fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(90.dp)
                     .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                onError = { Log.e("IMAGE_ERROR", "Gagal load gambar: ${it.result.throwable.message}") }
             )
             Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
                 Text(text = anime.title, style = MaterialTheme.typography.titleLarge)
@@ -294,7 +306,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
     )
 }
 
-private suspend fun signIn(context: Context, dataStore: UserDataStore) {
+private suspend fun signIn(context: Context, dataStore: UserDataStore, viewModel: MainViewModel) { // 👈 Tambah parameter viewModel
     val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
         .setFilterByAuthorizedAccounts(false)
         .setServerClientId(BuildConfig.API_KEY)
@@ -307,7 +319,7 @@ private suspend fun signIn(context: Context, dataStore: UserDataStore) {
     try {
         val credentialManager = CredentialManager.create(context)
         val result = credentialManager.getCredential(context, request)
-        handleSignIn(result, dataStore)
+        handleSignIn(result, dataStore, viewModel) // 👈 Oper viewModel ke sini
     } catch (e: GetCredentialException) {
         Log.e("SIGN-IN", "Error: ${e.errorMessage}")
     }
@@ -315,8 +327,9 @@ private suspend fun signIn(context: Context, dataStore: UserDataStore) {
 
 private suspend fun handleSignIn(
     result: GetCredentialResponse,
-    dataStore: UserDataStore
-    ) {
+    dataStore: UserDataStore,
+    viewModel: MainViewModel // 👈 Tambah parameter viewModel
+) {
     val credential = result.credential
 
     if (credential is CustomCredential &&
@@ -326,7 +339,13 @@ private suspend fun handleSignIn(
             val nama = googleId.displayName ?: ""
             val email = googleId.id
             val photoUrl = googleId.profilePictureUri.toString()
-            dataStore.saveData(User(nama, email,photoUrl))
+
+            // 1. Simpan ke DataStore internal UI
+            dataStore.saveData(User(nama, email, photoUrl))
+
+            // 2. 🔥 Jembatan Sinkronisasi: Simpan juga ke DataStore milik ViewModel
+            viewModel.saveLoginToPreferences(nama, email, photoUrl)
+
         } catch (e: GoogleIdTokenParsingException) {
             Log.e("SIGN-IN", "Error: ${e.message}")
         }
@@ -335,7 +354,7 @@ private suspend fun handleSignIn(
     }
 }
 
-private suspend fun signOut(context: Context, dataStore: UserDataStore) {
+private suspend fun signOut(context: Context, dataStore: UserDataStore, viewModel: MainViewModel) { // 👈 Tambah parameter viewModel
     try {
         val credentialManager = CredentialManager.create(context)
         credentialManager.clearCredentialState(
@@ -343,7 +362,14 @@ private suspend fun signOut(context: Context, dataStore: UserDataStore) {
         )
 
         dataStore.saveData(User())
+
+        // 3. 🔥 Ikut hapus sesi yang ada di ViewModel saat logout
+        viewModel.clearLoginFromPreferences()
+
     } catch (e: ClearCredentialException) {
         Log.e("SIGN-IN", "Error: ${e.errorMessage}")
     }
 }
+
+
+

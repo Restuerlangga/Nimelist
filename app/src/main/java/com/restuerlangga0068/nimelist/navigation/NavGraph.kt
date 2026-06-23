@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.restuerlangga0068.nimelist.ui.screen.AddAnimeScreen
 import com.restuerlangga0068.nimelist.ui.screen.DetailViewModel
 import com.restuerlangga0068.nimelist.ui.screen.HomeScreen
 import com.restuerlangga0068.nimelist.ui.screen.MainViewModel
@@ -17,30 +18,39 @@ import com.restuerlangga0068.nimelist.ui.screen.ReviewScreen
 import com.restuerlangga0068.nimelist.util.ViewModelFactory
 
 @Composable
-fun NimeNavGraph(viewModel: MainViewModel,
-                 factory: ViewModelFactory,
-                 navController: NavHostController = rememberNavController()) {
-
+fun NimeNavGraph(
+    viewModel: MainViewModel,
+    factory: ViewModelFactory,
+    navController: NavHostController = rememberNavController()
+) {
     val context = LocalContext.current
 
     NavHost(navController = navController, startDestination = "home") {
 
-        // HOME
+        // 1. HALAMAN UTAMA (HOME)
         composable("home") {
-
             HomeScreen(
                 viewModel = viewModel,
                 onItemClick = { animeId ->
+                    // 🔥 Perbaikan: Klik item langsung meluncur ke halaman review/detail
                     navController.navigate("review/$animeId")
                 },
                 onAddClick = {
-                    // Tambahkan navigasi ke rute baru untuk tambah data
-                    navController.navigate("review/new")
+                    // 🔥 Perbaikan: Klik FAB + langsung meluncur ke form tambah anime
+                    navController.navigate("add_anime")
                 }
             )
         }
 
+        // 2. HALAMAN TAMBAH ANIME (Poin 2d)
+        composable("add_anime") {
+            AddAnimeScreen(
+                viewModel = viewModel, // 🔥 Perbaikan: Diubah dari mainViewModel menjadi viewModel
+                onBackClick = { navController.popBackStack() }
+            )
+        }
 
+        // 3. HALAMAN REVIEW / DETAIL
         composable(
             route = "review/{animeId}",
             arguments = listOf(navArgument("animeId") { type = NavType.StringType })

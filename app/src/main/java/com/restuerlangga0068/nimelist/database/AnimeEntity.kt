@@ -13,6 +13,7 @@ data class AnimeEntity(
     val description: String?,
     val rating: Double,
     val review: String?,
+    val email: String,
 
     @SerializedName("is_completed")
     val isCompleted: Boolean,

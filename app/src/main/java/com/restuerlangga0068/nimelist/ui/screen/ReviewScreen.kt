@@ -168,7 +168,8 @@ fun ReviewScreen(
                                 rating = rating.toDouble(),
                                 review = review,
                                 isCompleted = isWatched,
-                                imageUrl = imageUrl
+                                imageUrl = imageUrl,
+                                email = "restuerlangga0068@gmail.com"
                             )
                             viewModel.insert(newAnime)
                         } else {
