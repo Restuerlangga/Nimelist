@@ -18,4 +18,5 @@
     <string name="btn_ok">OK</string>
     <string name="profil" translatable="false">Profil</string>
     <string name="tutup" translatable="false">Tutup</string>
+    <string name="logut" translatable="false">Logout</string>
 </resources>
