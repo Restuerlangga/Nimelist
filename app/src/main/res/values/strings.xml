@@ -16,5 +16,6 @@
     <string name="about_developer">Developed by:</string>
     <string name="about_desc">Simple anime list application for Mobile Programming task - Telkom University.</string>
     <string name="btn_ok">OK</string>
-    <string name="profil">Profil</string>
+    <string name="profil" translatable="false">Profil</string>
+    <string name="tutup" translatable="false">Tutup</string>
 </resources>
