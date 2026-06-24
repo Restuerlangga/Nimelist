@@ -7,15 +7,16 @@ import com.restuerlangga0068.nimelist.data.api.RetrofitClient
 import com.restuerlangga0068.nimelist.database.AnimeDao
 import com.restuerlangga0068.nimelist.database.AnimeEntity
 import com.restuerlangga0068.nimelist.util.UserPreferences
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 enum class ApiStatus { LOADING, SUCCESS, ERROR }
 
@@ -38,7 +39,6 @@ class MainViewModel(private val dao: AnimeDao, private val pref: UserPreferences
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val animeList: StateFlow<List<AnimeEntity>> = isSortedByRating.flatMapLatest { byRating ->
-        // Catatan: Jika fungsi rating sorted belum ada di Dao, gunakan dao.getAllAnime() dulu sementara waktu
         dao.getAllAnime()
     }.stateIn(
         scope = viewModelScope,
@@ -46,59 +46,55 @@ class MainViewModel(private val dao: AnimeDao, private val pref: UserPreferences
         initialValue = emptyList()
     )
 
-    // Ganti blok init lama kamu dengan yang ini:
     init {
         viewModelScope.launch {
-            // Mengamati email secara realtime. Begitu terisi (saat startup atau login), API langsung ditembak
             pref.userEmail.collect { email ->
                 if (email.isNotEmpty()) {
                     refreshDataFromServer()
                 } else {
-                    // Jika memang belum login, pastikan statusnya tidak stuck di LOADING
                     _apiStatus.value = ApiStatus.SUCCESS
                 }
             }
         }
     }
 
-
-    // Tambahkan parameter email atau ambil langsung dari DataStore/Preferences jika ada
     fun refreshDataFromServer() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _apiStatus.value = ApiStatus.LOADING
             try {
                 val apiKey = "sb_publishable_v4RMQvw75dy6Fv5bYFSedw_mGQCtXJK"
                 val token = "Bearer sb_publishable_v4RMQvw75dy6Fv5bYFSedw_mGQCtXJK"
 
-                // 1. Ambil email
                 val currentEmail = pref.userEmail.first()
 
-                // 🔍 TAMBAHKAN LOG INI UNTUK CEK EMAIL-NYA KOSONG ATAU TIDAK:
-                android.util.Log.d("API_DEBUG", "refreshDataFromServer dipanggil. Email saat ini di DataStore: '$currentEmail'")
-
                 if (currentEmail.isEmpty()) {
-                    // 🔍 TAMBAHKAN LOG INI JUGA:
-                    android.util.Log.w("API_DEBUG", "Proses API dibatalkan karena email kosong!")
                     _apiStatus.value = ApiStatus.SUCCESS
                     return@launch
                 }
 
                 val filterQuery = "eq.$currentEmail"
-                android.util.Log.d("API_DEBUG", "Memulai fetch data ke API dengan query: $filterQuery")
-
                 val remoteData = RetrofitClient.animeApiService.getAllAnime(apiKey, token, filterQuery)
-                android.util.Log.d("API_DEBUG", "Data berhasil didapat dari API: $remoteData")
 
+                Log.d("REFRESH_DEBUG", "Email: $currentEmail, Data dari server: ${remoteData.size} item")
+                remoteData.forEach { Log.d("REFRESH_DEBUG", "  - ${it.id} | ${it.title} | email: ${it.email}") }
+
+                // Hapus dulu data lama milik user ini, baru insert yang baru
+                dao.deleteAllByEmail(currentEmail)
                 dao.insertAnimeList(remoteData)
+
                 _apiStatus.value = ApiStatus.SUCCESS
             } catch (e: Exception) {
-                android.util.Log.e("API_ERROR", "Gagal fetch data: ${e.message}", e)
+                Log.e("API_ERROR", "Gagal fetch data: ${e.message}", e)
                 _apiStatus.value = ApiStatus.ERROR
             }
         }
     }
 
-
+    suspend fun getAnimeById(id: String): AnimeEntity? {
+        return withContext(Dispatchers.IO) {
+            dao.getAnimeById(id)
+        }
+    }
 
     fun toggleTheme(current: Boolean) {
         viewModelScope.launch {
@@ -112,11 +108,9 @@ class MainViewModel(private val dao: AnimeDao, private val pref: UserPreferences
         }
     }
 
-
     fun loginSukses(email: String, name: String, photoUrl: String) {
         viewModelScope.launch {
             pref.saveLoginSession(true, email, name, photoUrl)
-            // Setelah berhasil login, langsung tarik data dari server sesuai email tersebut
             refreshDataFromServer()
         }
     }
@@ -136,28 +130,27 @@ class MainViewModel(private val dao: AnimeDao, private val pref: UserPreferences
         userEmail: String,
         onSuccess: () -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val apiKey = "sb_publishable_v4RMQvw75dy6Fv5bYFSedw_mGQCtXJK"
                 val token = "Bearer sb_publishable_v4RMQvw75dy6Fv5bYFSedw_mGQCtXJK"
 
-                // 🔥 PERBAIKAN: Sesuaikan argumen dengan struktur data AnimeEntity milikmu
                 val newAnime = AnimeEntity(
                     id = java.util.UUID.randomUUID().toString(),
                     title = title,
                     description = description,
                     imageUrl = imageUrl,
-                    rating = rating.toDouble(), // 🔥 FIX 1: Ubah Int menjadi Double memakai .toDouble()
+                    rating = rating.toDouble(),
                     isCompleted = isCompleted,
                     email = userEmail,
-                    review = "" // 🔥 FIX 2: Masukkan parameter 'review' yang diminta (bisa diisi string kosong dulu)
+                    review = ""
                 )
 
                 val response = RetrofitClient.animeApiService.insertAnime(apiKey, token, listOf(newAnime))
 
                 if (response.isSuccessful) {
-                    refreshDataFromServer(  )
-                    onSuccess()
+                    refreshDataFromServer()
+                    withContext(Dispatchers.Main) { onSuccess() }
                 } else {
                     Log.e("API_ADD_ERROR", "Gagal insert: ${response.errorBody()?.string()}")
                 }
@@ -175,7 +168,6 @@ class MainViewModel(private val dao: AnimeDao, private val pref: UserPreferences
                 name = name,
                 photoUrl = photoUrl
             )
-            // 🔥 Setelah sukses tersimpan, langsung panggil API server!
             refreshDataFromServer()
         }
     }
@@ -186,5 +178,49 @@ class MainViewModel(private val dao: AnimeDao, private val pref: UserPreferences
         }
     }
 
+    fun updateAnime(anime: AnimeEntity, onSuccess: () -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val apiKey = "sb_publishable_v4RMQvw75dy6Fv5bYFSedw_mGQCtXJK"
+                val token = "Bearer sb_publishable_v4RMQvw75dy6Fv5bYFSedw_mGQCtXJK"
 
+                val response = RetrofitClient.animeApiService.updateAnime(apiKey, token, "eq.${anime.id}", anime)
+
+                Log.d("UPDATE_DEBUG", "Code: ${response.code()}, Body: ${response.errorBody()?.string()}")
+
+                if (response.isSuccessful) {
+                    dao.updateAnime(anime)
+                    refreshDataFromServer()
+                    withContext(Dispatchers.Main) { onSuccess() }
+                } else {
+                    Log.e("UPDATE_ERROR", "Gagal update: ${response.code()} - ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                Log.e("UPDATE_ERROR", "Exception: ${e.message}", e)
+            }
+        }
+    }
+
+    fun deleteAnime(anime: AnimeEntity, onSuccess: () -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val apiKey = "sb_publishable_v4RMQvw75dy6Fv5bYFSedw_mGQCtXJK"
+                val token = "Bearer sb_publishable_v4RMQvw75dy6Fv5bYFSedw_mGQCtXJK"
+
+                val response = RetrofitClient.animeApiService.deleteAnime(apiKey, token, "eq.${anime.id}")
+
+                Log.d("DELETE_DEBUG", "Code: ${response.code()}, Body: ${response.errorBody()?.string()}")
+
+                if (response.isSuccessful) {
+                    dao.deleteAnime(anime)
+                    refreshDataFromServer()
+                    withContext(Dispatchers.Main) { onSuccess() }
+                } else {
+                    Log.e("DELETE_ERROR", "Gagal hapus di API: ${response.code()} - ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                Log.e("DELETE_ERROR", "Exception: ${e.message}", e)
+            }
+        }
+    }
 }

@@ -3,7 +3,6 @@ package com.restuerlangga0068.nimelist.navigation
 import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -11,7 +10,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.restuerlangga0068.nimelist.ui.screen.AddAnimeScreen
-import com.restuerlangga0068.nimelist.ui.screen.DetailViewModel
 import com.restuerlangga0068.nimelist.ui.screen.HomeScreen
 import com.restuerlangga0068.nimelist.ui.screen.MainViewModel
 import com.restuerlangga0068.nimelist.ui.screen.ReviewScreen
@@ -25,6 +23,7 @@ fun NimeNavGraph(
 ) {
     val context = LocalContext.current
 
+
     NavHost(navController = navController, startDestination = "home") {
 
         // 1. HALAMAN UTAMA (HOME)
@@ -32,11 +31,11 @@ fun NimeNavGraph(
             HomeScreen(
                 viewModel = viewModel,
                 onItemClick = { animeId ->
-                    // 🔥 Perbaikan: Klik item langsung meluncur ke halaman review/detail
+
                     navController.navigate("review/$animeId")
                 },
                 onAddClick = {
-                    // 🔥 Perbaikan: Klik FAB + langsung meluncur ke form tambah anime
+
                     navController.navigate("add_anime")
                 }
             )
@@ -45,22 +44,21 @@ fun NimeNavGraph(
         // 2. HALAMAN TAMBAH ANIME (Poin 2d)
         composable("add_anime") {
             AddAnimeScreen(
-                viewModel = viewModel, // 🔥 Perbaikan: Diubah dari mainViewModel menjadi viewModel
+                viewModel = viewModel,
                 onBackClick = { navController.popBackStack() }
             )
         }
 
-        // 3. HALAMAN REVIEW / DETAIL
+
         composable(
             route = "review/{animeId}",
             arguments = listOf(navArgument("animeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val animeId = backStackEntry.arguments?.getString("animeId") ?: "new"
-            val detailViewModel: DetailViewModel = viewModel(factory = factory)
 
             ReviewScreen(
                 animeId = animeId,
-                viewModel = detailViewModel,
+                viewModel = viewModel, // 🔥 Pakai MainViewModel
                 onBackClick = { navController.popBackStack() },
                 onShareClick = { text ->
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -71,5 +69,6 @@ fun NimeNavGraph(
                 }
             )
         }
+        }
     }
-}
+

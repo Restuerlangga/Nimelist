@@ -19,9 +19,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
@@ -67,9 +67,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
-import androidx.datastore.dataStore
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -81,7 +79,6 @@ import com.restuerlangga0068.nimelist.model.User
 import com.restuerlangga0068.nimelist.network.UserDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.handleCoroutineException
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,6 +100,9 @@ fun HomeScreen(
     val user by dataStore.userFlow.collectAsState(User())
     var showProfileDialog by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
+    val status by viewModel.apiStatus.collectAsState()
+
+
 
 
 
@@ -210,7 +210,8 @@ fun HomeScreen(
                         items(animeList, key = { it.id }) { anime ->
                             AnimeCard(
                                 anime = anime,
-                                onClick = { onItemClick(anime.id) }
+                                onClick = { onItemClick(anime.id) },
+                                onDelete = { viewModel.deleteAnime(anime) {} }
                             )
                         }
                     }
@@ -249,7 +250,24 @@ fun HomeScreen(
 }
 
 @Composable
-fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit) {
+fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit, onDelete: () -> Unit ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Hapus Anime") },
+            text = { Text("Yakin ingin menghapus ${anime.title}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteDialog = false
+                }) { Text("Hapus") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Batal") }
+            }
+        )
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -278,6 +296,9 @@ fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit) {
                 if (anime.rating > 0) {
                     Text("⭐ ${anime.rating}/5", color = Color(0xFFFFD700))
                 }
+            }
+            IconButton(onClick = { showDeleteDialog = true }) {
+                Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = Color.Red)
             }
         }
     }

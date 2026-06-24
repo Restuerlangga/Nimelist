@@ -20,9 +20,20 @@ interface AnimeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAnime(anime: AnimeEntity)
 
+    @Delete
+    suspend fun deleteAnime(anime: AnimeEntity)
+
+
+
 
     @Query("DELETE FROM anime WHERE id = :id")
     suspend fun deleteAnimeById(id: String)
+
+    @Update
+    suspend fun updateAnime(anime: AnimeEntity)
+
+    @Query("DELETE FROM anime WHERE email = :email")
+    suspend fun deleteAllByEmail(email: String)
 
 
 
