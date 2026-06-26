@@ -69,6 +69,7 @@ import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -277,8 +278,13 @@ fun AnimeCard(anime: AnimeEntity, onClick: () -> Unit, onDelete: () -> Unit ) {
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
-                model = anime.imageUrl,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(anime.imageUrl)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = null,
+                placeholder = painterResource(R.drawable.loading_img),
+                error = painterResource(R.drawable.broken_img),
                 modifier = Modifier
                     .size(90.dp)
                     .clip(RoundedCornerShape(8.dp)),

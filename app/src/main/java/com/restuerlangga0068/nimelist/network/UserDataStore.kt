@@ -1,9 +1,7 @@
 package com.restuerlangga0068.nimelist.network
 
 import android.content.Context
-import androidx.compose.ui.res.stringResource
 import androidx.datastore.core.DataStore
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
